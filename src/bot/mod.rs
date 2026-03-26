@@ -1,6 +1,11 @@
-use log::info;
-use serenity::all::{Context, EventHandler, GatewayIntents, Ready};
+pub mod commands;
+
+use std::collections::HashMap;
+use std::sync::Arc;
+use log::{debug, info};
+use serenity::all::{Context, EventHandler, GatewayIntents, Interaction, Ready};
 use serenity::{async_trait, Client};
+use crate::bot::commands::{register_commands, Command};
 
 pub struct PaulBot {
     client: Client,
@@ -12,12 +17,27 @@ impl PaulBot {
     }
 }
 
-pub struct Handler;
+pub struct Handler{
+
+    commands: HashMap<String, Arc<dyn Command + Send + Sync>>
+}
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn ready( &self, _ctx: Context, data_about_bot: Ready) {
-        info!("PaulBot logged in as {}", data_about_bot.user.id)
+    async fn ready( &self, ctx: Context, data_about_bot: Ready) {
+        info!("PaulBot logged in as {}", data_about_bot.user.id);
+
+        register_commands(&ctx, &self.commands).await;
+    }
+
+    async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
+        if let Interaction::Command(command) = interaction {
+            debug!("Received command interaction -> {command:#?}");
+
+            let cmd = self.commands.get(command.data.name.as_str()).unwrap();
+
+            cmd.run(ctx, command).await;
+        }
     }
 }
 
@@ -30,7 +50,11 @@ pub async fn init (token: String) -> PaulBot {
         | GatewayIntents::DIRECT_MESSAGE_TYPING
         | GatewayIntents::MESSAGE_CONTENT;
 
-    let client = Client::builder(&token, intents).event_handler(Handler).await.expect("Error creating client");
+    let commands = commands::init_commands();
+
+    let handler = Handler { commands };
+    let client = Client::builder(&token, intents).event_handler(handler).await.expect("Error creating client");
+
     PaulBot { client }
 }
 

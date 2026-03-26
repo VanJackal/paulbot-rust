@@ -26,7 +26,7 @@ for the image.
 # TODO
 
 ## Commands
-- [ ] Implement `/meow`
+- [x] Implement `/meow`
     - [ ] Reply with a meow message
     - [ ] store a set of cat meow messages (probably JSON text file, doesn't need a DB)
 - [ ] Implement `/pet [cat]`
