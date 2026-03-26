@@ -1,5 +1,5 @@
 use log::warn;
-use serenity::all::{CommandInteraction, Context, CreateCommand, CreateInteractionResponse, CreateInteractionResponseMessage, Interaction};
+use serenity::all::{CommandInteraction, Context, CreateCommand, CreateInteractionResponse, CreateInteractionResponseMessage};
 use serenity::async_trait;
 use crate::bot::commands::Command;
 
