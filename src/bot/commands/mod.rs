@@ -29,7 +29,7 @@ pub async fn register_commands(ctx:&Context,commands:&HashMap<String,Arc<dyn Com
         info!("Registered command: {}", name)
     }
     
-    let guild = GuildId::new(667029987479650324);
+    let guild = GuildId::new(667029987479650324);//todo switch to global
     guild.set_commands(&ctx.http, command_list).await.expect("Error registering commands");
     
 }
