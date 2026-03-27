@@ -5,6 +5,7 @@ use std::sync::Arc;
 use log::info;
 use serenity::all::{CommandInteraction, Context, CreateCommand, GuildId};
 use serenity::async_trait;
+use crate::settings::Settings;
 
 #[async_trait]
 pub trait Command {
@@ -12,10 +13,10 @@ pub trait Command {
     async fn register(&self) -> CreateCommand;
 }
 
-pub fn init_commands() -> HashMap<String, Arc<dyn Command+Send+Sync>> {
+pub fn init_commands(settings: &Settings) -> HashMap<String, Arc<dyn Command+Send+Sync>> {
     let mut commands :HashMap<String, Arc<dyn Command+Send+Sync>> = HashMap::new();
     // INIT
-    commands.insert("meow".into(), Arc::new(meow::MeowCommand));
+    commands.insert("meow".into(), Arc::new(meow::MeowCommand::new(settings)));
     
     commands
 }

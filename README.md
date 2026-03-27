@@ -27,13 +27,16 @@ for the image.
 
 ## Commands
 - [x] Implement `/meow`
-    - [ ] Reply with a meow message
-    - [ ] store a set of cat meow messages (probably JSON text file, doesn't need a DB)
+    - [x] Reply with a meow message
+    - [x] store a set of cat meow messages (probably JSON text file, doesn't need a DB)
+    - [ ] stats tracking
 - [ ] Implement `/pet [cat]`
     - [ ] Reply with an image (url) of a cat
     - [ ] cat images should have a brief title that can be used for link formatting
+    - [ ] stats tracking
 - [ ] Implement `/petpetpet [cat] [amount]`
     - [ ] Reply with `amount` random cat images
+    - [ ] stats tracking
 - [ ] Implement `/feed [cat]`
     - [ ] Feed a cat
     - [ ] Increment the cat's feed stat
