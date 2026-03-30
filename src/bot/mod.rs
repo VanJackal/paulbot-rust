@@ -20,7 +20,7 @@ impl PaulBot {
 
 pub struct Handler{
 
-    commands: HashMap<String, Arc<dyn Command + Send + Sync>>
+    commands: HashMap<String, Arc<dyn Command>>
 }
 
 #[async_trait]

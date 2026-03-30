@@ -8,19 +8,19 @@ use serenity::async_trait;
 use crate::settings::Settings;
 
 #[async_trait]
-pub trait Command {
+pub trait Command : Send + Sync {
     async fn run(&self, ctx:Context, command:CommandInteraction );
     async fn register(&self) -> CreateCommand;
 }
 
-pub fn init_commands(settings: &Settings) -> HashMap<String, Arc<dyn Command+Send+Sync>> {
-    let mut commands :HashMap<String, Arc<dyn Command+Send+Sync>> = HashMap::new();
+pub fn init_commands(settings: &Settings) -> HashMap<String, Arc<dyn Command>> {
+    let mut commands :HashMap<String, Arc<dyn Command>> = HashMap::new();
     // INIT
     commands.insert("meow".into(), Arc::new(meow::MeowCommand::new(settings)));
     
     commands
 }
-pub async fn register_commands(ctx:&Context,commands:&HashMap<String,Arc<dyn Command+Send+Sync>>){
+pub async fn register_commands(ctx:&Context,commands:&HashMap<String,Arc<dyn Command>>){
     
     // REGISTRATION
     let mut command_list:Vec<CreateCommand> = Vec::new();
