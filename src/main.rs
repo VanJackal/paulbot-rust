@@ -3,6 +3,10 @@ use crate::settings::Settings;
 
 pub mod bot;
 pub mod settings;
+pub mod logic;
+pub mod data;
+pub mod objects;
+mod error;
 
 #[tokio::main]
 async fn main() {
@@ -10,7 +14,7 @@ async fn main() {
     info!("Starting PaulBot");
 
     let token = std::env::var("DISCORD_TOKEN").expect("DISCORD_TOKEN environment variable must be set");
-    
+
     let settings = Settings::new().expect("Failed to load settings");
 
     let mut bot = bot::init(token, &settings).await;

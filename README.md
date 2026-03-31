@@ -51,6 +51,7 @@ for the image.
     - [ ] Provide a menu for adding image details
     - [ ] Save the image metadata for later use
 - [ ] Downloading cat picture from discord
+- [ ] adding new cats
 
 ## Data 
 - [ ] SQLite DB Schema definition
