@@ -8,14 +8,20 @@ pub trait ImageProvider {
 }
 
 
-struct ImageManager {
-    db: Box<dyn ImageDatabase>,
+struct ImageManager<'a> {
+    db: &'a (dyn ImageDatabase + 'a),
     settings: Settings
 }
 
-impl ImageProvider for ImageManager {
+impl ImageProvider for ImageManager<'_> {
     fn get_image(&self, cat: Option<Cat>) -> Result<CatImage, PaulError> {
         self.db.get_image(cat)
+    }
+}
+
+impl<'a> ImageManager<'a> {
+    fn new(settings: Settings, db: &'a impl ImageDatabase) -> Self {
+        Self { db, settings }
     }
 }
 
@@ -51,30 +57,48 @@ mod test {
         }
     }
 
-    fn setup() -> (ImageManager, CatImage, Cat) {
-        let cat = Cat{
-            id: 0,
-            name: "A Cat".to_string(),
-        };
-        let image = CatImage {
-            id: 0,
-            url: "url.to.an.image".to_string(),
-            cat: cat.clone(),
-        };
-        (
-            ImageManager {
-                db: Box::new(FakeDB{image:image.clone()}),
-                settings: Settings::new().unwrap(),
-            },
-            image,
-            cat
-
-        )
+    struct Env {
+        pub db:FakeDB,
+        pub image: CatImage,
+        pub cat: Cat
     }
+
+    impl Env{
+        fn new() -> Self {
+            let cat = Cat{
+                id: 0,
+                name: "A Cat".to_string(),
+            };
+            let image = CatImage {
+                id: 0,
+                url: "url.to.an.image".to_string(),
+                cat: cat.clone(),
+            };
+            let db = FakeDB { image: image.clone() };
+
+            Self {
+                db,
+                image,
+                cat
+            }
+        }
+
+        fn get(&'_ self) -> (ImageManager<'_>, CatImage, Cat) {
+            (
+                ImageManager::new(Settings::new().unwrap(),&self.db),
+                self.image.clone(),
+                self.cat.clone()
+            )
+        }
+    }
+
+
+
 
     #[test]
     fn test_valid_cat() {
-        let (im, image, cat) = setup();
+        let env = Env::new();
+        let (im, image, cat) = env.get();
 
         let result = im.get_image(Some(cat));
         assert!(result.is_ok());
@@ -83,7 +107,9 @@ mod test {
 
     #[test]
     fn test_invalid_cat() {
-        let (im, _image, _cat) = setup();
+        let env = Env::new();
+        let (im, _image, _cat) = env.get();
+
         let invalid_cat = Cat{
             id: 1337,
             name: "A Cat".to_string(),
@@ -95,7 +121,8 @@ mod test {
 
     #[test]
     fn test_test_no_cat() {
-        let (im, image, _cat) = setup();
+        let env = Env::new();
+        let (im, image, _cat) = env.get();
 
         let result = im.get_image(None);
         assert!(result.is_ok());
