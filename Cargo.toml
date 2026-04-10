@@ -11,3 +11,4 @@ colog = "1.4.0"
 config = "0.15.22"
 serde = { version = "1.0.228", features = ["derive"] }
 rand = "0.10.0"
+sqlite = "0.37.0"

@@ -1,14 +1,21 @@
 use config::{Config, ConfigError};
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Settings {
-    pub commands: CommandSettings
+    pub commands: CommandSettings,
+    pub database: DatabaseSettings
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct CommandSettings {
-    pub meows:Vec<String>
+    pub meows:Vec<String>,
+    pub default_cat_id:i64
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct DatabaseSettings {
+    pub url: String,
 }
 
 impl Settings {

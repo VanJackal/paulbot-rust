@@ -4,3 +4,7 @@ meows = [
     "**MEOW!!!**",
     "*MEEEEEOOOOWWWW*"
 ]
+default_cat_id = 1
+
+[database]
+url = ":memory:"

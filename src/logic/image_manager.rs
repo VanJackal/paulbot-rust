@@ -4,23 +4,23 @@ use crate::objects::{Cat, CatImage};
 use crate::settings::Settings;
 
 pub trait ImageProvider {
-    fn get_image(&self, cat:Option<Cat>) -> Result<CatImage, PaulError>;
+    fn get_image(&self, cat:&Option<Cat>) -> Result<CatImage, PaulError>;
 }
 
 
-struct ImageManager<'a> {
+pub struct ImageManager<'a> {
     db: &'a (dyn ImageDatabase + 'a),
     settings: Settings
 }
 
 impl ImageProvider for ImageManager<'_> {
-    fn get_image(&self, cat: Option<Cat>) -> Result<CatImage, PaulError> {
+    fn get_image(&self, cat: &Option<Cat>) -> Result<CatImage, PaulError> {
         self.db.get_image(cat)
     }
 }
 
 impl<'a> ImageManager<'a> {
-    fn new(settings: Settings, db: &'a impl ImageDatabase) -> Self {
+    pub fn new(settings: Settings, db: &'a impl ImageDatabase) -> Self {
         Self { db, settings }
     }
 }
@@ -42,13 +42,13 @@ mod test {
     }
 
     impl ImageDatabase for FakeDB {
-        fn get_image(&self, cat: Option<Cat>) -> Result<CatImage, PaulError> {
+        fn get_image(&self, cat: &Option<Cat>) -> Result<CatImage, PaulError> {
 
             if let Some(c) = cat{
                 if c.id == self.image.cat.id {
                     Ok(self.image.clone())
                 } else {
-                    Err(PaulError::InvalidCat(c))
+                    Err(PaulError::ImageRetrievalError("No such cat".into()))
                 }
             } else {
                 Ok(self.image.clone())
@@ -100,7 +100,7 @@ mod test {
         let env = Env::new();
         let (im, image, cat) = env.get();
 
-        let result = im.get_image(Some(cat));
+        let result = im.get_image(&Some(cat));
         assert!(result.is_ok());
         assert_eq!(result.unwrap().id, image.id);
     }
@@ -115,7 +115,7 @@ mod test {
             name: "A Cat".to_string(),
         };
 
-        let result = im.get_image(Some(invalid_cat));
+        let result = im.get_image(&Some(invalid_cat));
         assert!(result.is_err());
     }
 
@@ -124,7 +124,7 @@ mod test {
         let env = Env::new();
         let (im, image, _cat) = env.get();
 
-        let result = im.get_image(None);
+        let result = im.get_image(&None);
         assert!(result.is_ok());
         assert_eq!(result.unwrap().id, image.id);
     }
