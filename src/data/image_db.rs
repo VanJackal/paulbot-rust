@@ -1,65 +1,65 @@
+use crate::data::pool::Pool;
 use crate::error::PaulError;
 use crate::objects::{Cat, CatImage};
-use sqlite;
-use sqlite::{Connection, State};
 use crate::settings::Settings;
 
-pub trait ImageDatabase {
+pub trait ImageDatabase: Send + Sync {
     fn get_image(&self, cat: &Option<Cat>) -> Result<CatImage, PaulError>;
 }
 
-pub struct ImageDB{
-    connection: Connection,
-    default_cat_id: i64
+#[derive(Clone)]
+pub struct ImageDB {
+    default_cat_id: i64,
+    pool: Pool
 }
 
 impl ImageDB {
-    pub fn new(settings: & Settings) -> Self {
-        let conn = sqlite::open(settings.database.url.clone()).unwrap();
-        Self::init_db(&conn);
+    pub fn new(settings: & Settings, pool: Pool) -> Self {
+        Self::init_db(&pool);
         Self {
-            connection:conn,
+            pool,
             default_cat_id:settings.commands.default_cat_id
         }
     }
 
-    fn init_db(conn: &Connection) {
-        let check_query = "SELECT name FROM sqlite_master WHERE type='table' AND name='cats'";
-        let mut count = 0;
-        conn.iterate(check_query, |_| {
-            count += 1;
-            true
-        }).unwrap();
+    fn init_db(pool: &Pool) {
+        let conn = pool.get().unwrap();
 
-        if count == 0 {
+        if !conn.table_exists(None, "cats").unwrap() {
             let create_query = include_str!("database.sql");
-            conn.execute(create_query).unwrap();
+            conn.execute_batch(create_query).unwrap();
         }
     }
 }
 
-impl ImageDatabase for ImageDB {
+impl <'a> ImageDatabase for ImageDB {
     fn get_image(&self, cat: &Option<Cat>) -> Result<CatImage, PaulError> {
-        let sql = "SELECT * FROM images WHERE cat_id = ? ORDER BY random() LIMIT 1;";
-        let mut stmt = self.connection.prepare(sql).unwrap();
+        let sql = "SELECT images.id, images.url, images.cat_id, cats.name FROM images LEFT JOIN cats ON images.cat_id = cats.id WHERE cat_id = ? ORDER BY random() LIMIT 1;";
+        let conn = self.pool.get().unwrap();
+        let mut stmt = conn.prepare(sql).unwrap();
         let id:i64;
         if let Some(cat) = cat {
             id = cat.id;
         } else {
             id = self.default_cat_id;
         }
-        stmt.bind((1, id)).unwrap();
-        if let Ok(State::Row) = stmt.next() {
-            return Ok(CatImage { //todo cat should be retrieved in the same query
-                id: stmt.read::<i64,_>("id").unwrap(),
-                url: stmt.read::<String,_>("url").unwrap(),
+        let rows = stmt.query_map([id],|row| {
+            Ok(CatImage {//todo these should be in a separate func
+                id: row.get(0)?,
+                url: row.get(1)?,
                 cat: Cat{
-                    name:"a cat".into(),
-                    id: 1,
-
+                    id: row.get(2)?,
+                    name: row.get(3)?,
                 }
-            }) //todo this conversion logic should be done in a separate file
+            })
+        });
+
+        if let Ok(images) = rows {
+            for image in images {
+                return Ok(image.unwrap());
+            }
         }
+
         Err(PaulError::ImageRetrievalError("Failed to retrieve single image from database.".into()))
     }
 }
