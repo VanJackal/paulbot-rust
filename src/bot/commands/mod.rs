@@ -6,6 +6,7 @@ use std::sync::Arc;
 use log::info;
 use serenity::all::{CommandInteraction, Context, CreateCommand, GuildId};
 use serenity::async_trait;
+use crate::logic::ImageManager;
 use crate::settings::Settings;
 
 #[async_trait]
@@ -14,10 +15,11 @@ pub trait Command : Send + Sync {
     async fn register(&self) -> CreateCommand;
 }
 
-pub fn init_commands(settings: &Settings) -> HashMap<String, Arc<dyn Command>> {
+pub fn init_commands(settings: &Settings, image_manager: Box<ImageManager>) -> HashMap<String, Arc<dyn Command>> {
     let mut commands :HashMap<String, Arc<dyn Command>> = HashMap::new();
     // INIT
     commands.insert("meow".into(), Arc::new(meow::MeowCommand::new(settings)));
+    commands.insert("pet".into(), Arc::new(pet::PetCommand::new(image_manager)));
     
     commands
 }

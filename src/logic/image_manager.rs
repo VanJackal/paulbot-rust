@@ -8,19 +8,19 @@ pub trait ImageProvider {
 }
 
 
-pub struct ImageManager<'a> {
-    db: &'a (dyn ImageDatabase + 'a),
+pub struct ImageManager {
+    db: Box<dyn ImageDatabase>,
     settings: Settings
 }
 
-impl ImageProvider for ImageManager<'_> {
+impl ImageProvider for ImageManager {
     fn get_image(&self, cat: &Option<Cat>) -> Result<CatImage, PaulError> {
         self.db.get_image(cat)
     }
 }
 
-impl<'a> ImageManager<'a> {
-    pub fn new(settings: Settings, db: &'a impl ImageDatabase) -> Self {
+impl ImageManager {
+    pub fn new(settings: Settings, db: Box<impl ImageDatabase + 'static>) -> Self {
         Self { db, settings }
     }
 }
@@ -37,6 +37,7 @@ mod test {
     use crate::objects::{Cat, CatImage};
     use crate::settings::Settings;
 
+    #[derive(Clone)]
     struct FakeDB {
         image: CatImage
     }
@@ -83,9 +84,9 @@ mod test {
             }
         }
 
-        fn get(&'_ self) -> (ImageManager<'_>, CatImage, Cat) {
+        fn get(&'_ self) -> (Box<ImageManager>, CatImage, Cat) {
             (
-                ImageManager::new(Settings::new().unwrap(),&self.db),
+                Box::new(ImageManager::new(Settings::new().unwrap(),Box::new(self.db.clone()))),
                 self.image.clone(),
                 self.cat.clone()
             )

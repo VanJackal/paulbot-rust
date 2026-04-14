@@ -29,8 +29,8 @@ impl Env {
         }
     }
 
-    fn im(&'_ self) -> ImageManager<'_> {
-        ImageManager::new(self.settings.clone(), &self.db)
+    fn im(&'_ self) -> ImageManager {
+        ImageManager::new(self.settings.clone(), Box::new(self.db.clone()))
     }
 
 }

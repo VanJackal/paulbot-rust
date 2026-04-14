@@ -6,6 +6,7 @@ use log::{debug, info};
 use serenity::all::{Context, EventHandler, GatewayIntents, Interaction, Ready};
 use serenity::{async_trait, Client};
 use crate::bot::commands::{register_commands, Command};
+use crate::logic::ImageManager;
 use crate::settings::Settings;
 
 pub struct PaulBot {
@@ -42,7 +43,7 @@ impl EventHandler for Handler {
     }
 }
 
-pub async fn init (token:String, settings: &Settings) -> PaulBot {
+pub async fn init<'a> (token:String, settings: &Settings, image_manager: Box<ImageManager>) -> PaulBot {
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::GUILD_MESSAGE_REACTIONS
         | GatewayIntents::GUILD_MESSAGE_TYPING
@@ -51,7 +52,7 @@ pub async fn init (token:String, settings: &Settings) -> PaulBot {
         | GatewayIntents::DIRECT_MESSAGE_TYPING
         | GatewayIntents::MESSAGE_CONTENT;
 
-    let commands = commands::init_commands(&settings);
+    let commands = commands::init_commands(&settings, image_manager);
 
     let handler = Handler { commands };
     let client = Client::builder(&token, intents).event_handler(handler).await.expect("Error creating client");
